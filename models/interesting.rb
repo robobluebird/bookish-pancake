@@ -26,7 +26,7 @@ module Interesting
   end
 
   def file_path(opts = {})
-    File.join opts.fetch(:type), Date.today.to_s, opts.fetch(:handle), "#{Time.now.to_i}.#{opts.fetch(:ext)}"
+    File.join opts.fetch(:type), Date.today.to_s, "#{Time.now.to_i}.#{opts.fetch(:extension)}"
   end
 
   def upload
@@ -71,7 +71,8 @@ module Interesting
 
     ready = mime_type.end_with?('mp3') ? sound : convert_sound_format_to_mp3(sound)
 
-    Cocaine::CommandLine.new('sox', ':in -c 1 -C 128 :out norm riaa vad reverse vad reverse').run(in: ready.path, out: tempfile.path)
+    Cocaine::CommandLine.new('sox', ':in -c 1 -C 128 :out norm riaa vad reverse vad reverse')
+      .run(in: ready.path, out: tempfile.path)
 
     [tempfile.read, sound_duration(tempfile)]
   end
@@ -91,11 +92,9 @@ module Interesting
   def upload_to_s3(type, data = nil, time = nil, old_url = nil)
     return if data.nil? || data.size == 0 || time.nil? || time > 30
 
-    new_url = file_path(type)
+    new_url = file_path(type: type, extension: 'mp3')
 
     aws_client.put_object(bucket: 'tel-serv', key: new_url, body: data)
-
-    aws_client.delete_object(bucket: 'tel-serv', key: old_url) if old_url
 
     new_url
   end

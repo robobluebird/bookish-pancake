@@ -1,0 +1,3 @@
+require './tel'
+
+run Tel

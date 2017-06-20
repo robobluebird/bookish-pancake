@@ -1,0 +1,5 @@
+require 'mongoid'
+require './models/chain'
+require './models/sound'
+ENV['RACK_ENV'] = 'development'
+Mongoid.load! 'mongoid.yml'
