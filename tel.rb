@@ -22,7 +22,10 @@ class Tel < Sinatra::Base
   helpers Interesting
 
   before do
-    halt 401 unless current_token
+    unless request.fullpath.include?('access_tokens')
+      halt 401 if current_token.nil?
+      halt 403 if current_token.banned?
+    end
   end
 
   error do
@@ -33,18 +36,14 @@ class Tel < Sinatra::Base
   end
 
   post '/access_tokens/new' do
-    temporary_token = TemporaryToken.create
-
-    json token: temporary_token.token
+    json token: TemporaryToken.create.token
   end
 
   post '/access_tokens' do
-    if TemporaryToken.validate! params[:token]
-      access_token = AccessToken.create
-
-      render token: access_token.token
+    if TemporaryToken.validate! params[:access_token][:token]
+      json token: AccessToken.create.token
     else
-      halt 401
+      halt 403
     end
   end
 

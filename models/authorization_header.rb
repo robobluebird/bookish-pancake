@@ -26,7 +26,7 @@ module AuthorizationHeader
         def parse_auth_pair(pair_str)
           pair = pair_str.split '='
 
-          if pair.count == 2
+          if pair.count == 2 && pair[0] == 'Token'
             pair
           else
             [nil, nil]
