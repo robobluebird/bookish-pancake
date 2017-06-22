@@ -1,8 +1,8 @@
-module Auth
+module AuthorizationHeader
   module ::Sinatra
     class Request
       def authorization
-        @authorization_header ||= begin
+        @authorization ||= begin
           Sinatra::HeaderField::Authorization.new self.env['HTTP_AUTHORIZATION']
         end
       end
@@ -34,13 +34,5 @@ module Auth
         end
       end
     end
-  end
-
-  def current_account
-    @current_account ||= Account.find_by api_key: request.authorization.value
-  end
-
-  def current_creator
-    @current_creator ||= Creator.new_with_account(current_account) if current_account
   end
 end

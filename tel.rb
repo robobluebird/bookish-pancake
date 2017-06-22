@@ -21,6 +21,10 @@ class Tel < Sinatra::Base
 
   helpers Interesting
 
+  before do
+    halt 401 unless current_token
+  end
+
   error do
     logger.error env['sinatra.error'].message
     logger.error env['sinatra.error'].backtrace.first
@@ -28,8 +32,20 @@ class Tel < Sinatra::Base
     halt 400, json(error: 'sorry, something went wrong')
   end
 
-  get '/' do
-    [200, {}, ['YOUR LIFE IS A LIE']]
+  post '/access_tokens/new' do
+    temporary_token = TemporaryToken.create
+
+    json token: temporary_token.token
+  end
+
+  post '/access_tokens' do
+    if TemporaryToken.validate! params[:token]
+      access_token = AccessToken.create
+
+      render token: access_token.token
+    else
+      halt 401
+    end
   end
 
   get '/chains' do

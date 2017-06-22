@@ -11,7 +11,6 @@ class Chain
   field :queued_build_count, default: 0
 
   embeds_many :sounds
-  embeds_one :creator, as: :creatable
 
   def initialize(attrs = nil)
     super attrs && attrs.merge(code: random_code) || { code: random_code }
@@ -38,7 +37,6 @@ class Chain
       duration: duration,
       code: code,
       queued_build_count: queued_build_count,
-      creator: creator.to_h,
       sounds: visible_sounds.map(&:to_h)
     }
   end

@@ -10,7 +10,6 @@ class Sound
   field :color,    type: String
 
   embedded_in :chain
-  embeds_one :creator, as: :creatable
 
   def initialize(attrs = nil)
     super attrs && attrs.merge(color: random_color) || { color: random_color }
@@ -22,8 +21,7 @@ class Sound
       url: url,
       duration: duration,
       position: position,
-      color: color,
-      creator: creator.to_h
+      color: color
     }
   end
 

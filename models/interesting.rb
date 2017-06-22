@@ -3,22 +3,8 @@ require 'aws-sdk'
 require 'date'
 
 module Interesting
-  def valid_new_handle?
-    Account.find_by(handle: params[:handle]).nil?
-  end
-
-  def current_account
-    @current_account ||= Account.find_by api_key: params[:api_key]
-  end
-
-  def current_creator
-    return if current_account.nil?
-
-    @current_creator ||= Creator.new handle: current_account.handle, account_id: current_account.id
-  end
-
-  def signup_code
-    @signup_code ||= ZCode.find_by code: params[:code]
+  def current_token
+    @current_token ||= AccessToken.find_by(token: request.authorization.value) rescue nil
   end
 
   def aws_client
