@@ -32,7 +32,7 @@ class Tel < Sinatra::Base
     logger.error env['sinatra.error'].message
     logger.error env['sinatra.error'].backtrace.first
 
-    halt 400, json(error: 'sorry, something went wrong')
+    halt 400
   end
 
   post '/access_tokens/new' do
@@ -48,20 +48,17 @@ class Tel < Sinatra::Base
   end
 
   get '/chains' do
-    res = if params[:chain_ids].nil?
-            Chain.all.to_a.shuffle.map(&:to_h)
-          else
-            params[:chain_ids].map { |chain_id| Chain.find chain_id }.map(&:to_h)
-          end
-
-    json chains: res
+    json chains: Chain.all.to_a.shuffle.map(&:to_h)
   end
 
   get '/chains/:chain_id' do
-    chain = Chain.find params[:chain_id]
-
-    json chain: chain.to_h
+    json chain: Chain.find(params[:chain_id]).to_h
   end
+
+  get '/codes/:code/chain' do
+    json chain: Chain.find_by(code: params[:code]).to_h
+  end
+
 
   post '/chains' do
     chain = Chain.create
