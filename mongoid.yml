@@ -14,4 +14,3 @@ production:
   clients:
     default:
       uri: <%= ENV['MONGODB_URI'] %>
-      database: tel_production
