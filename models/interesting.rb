@@ -44,7 +44,7 @@ module Interesting
   def convert_sound_format_to_mp3(sound)
     tempfile = Tempfile.new ['', '.mp3']
 
-    Cocaine::CommandLine.new('ffmpeg', '-i :in -acodec libmp3lame -y -b:a 128k -ar 44100 :out')
+    Cocaine::CommandLine.new('ffmpeg', '-i :in -acodec libmp3lame -y -b:a 96k -ar 16000 -ac 1 :out')
       .run(in: sound.path, out: tempfile.path)
 
     tempfile
