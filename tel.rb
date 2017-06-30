@@ -19,7 +19,7 @@ class Tel < Sinatra::Base
   helpers Interesting
 
   before do
-    unless request.fullpath.include?('access_tokens')
+    unless request.fullpath.include?('access_tokens') || request.fullpath == '/'
       halt 401 if current_token.nil?
       halt 403 if current_token.banned?
     end
