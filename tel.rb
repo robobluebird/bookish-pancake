@@ -43,6 +43,10 @@ class Tel < Sinatra::Base
       halt 403
     end
   end
+  
+  get '/' do
+    "hello darkness my old friend"
+  end
 
   get '/chains' do
     json chains: Chain.all.to_a.shuffle.map(&:to_h)
