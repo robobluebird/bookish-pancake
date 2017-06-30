@@ -1,2 +1,2 @@
-web: bundle exec rackup -p 4567
+web: bundle exec rackup -p $PORT -e $RACK_ENV
 worker: bundle exec rake jobs:work
