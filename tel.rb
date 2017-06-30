@@ -13,10 +13,6 @@ class Tel < Sinatra::Base
 
   Mongoid.load! 'mongoid.yml'
 
-  Mongoid.configure do |config|
-    config.raise_not_found_error = false
-  end
-
   Qu.backend = Qu::Backend::Mongoid.new
 
   helpers Interesting
@@ -56,15 +52,16 @@ class Tel < Sinatra::Base
   end
 
   get '/codes/:code/chain' do
-    json chain: Chain.find_by(code: params[:code]).to_h
+    json chain: (Chain.find_by(code: params[:code]) rescue nil).to_h
   end
-
 
   post '/chains' do
     chain = Chain.create
 
     if upload[:tempfile]
       data, time = process_sound upload[:tempfile], upload[:type]
+
+      chain.destroy and halt 422 if data.nil? || data.size == 0 || time.nil? || time > 30
 
       path = upload_to_s3 'sounds', data, time
 
@@ -80,6 +77,8 @@ class Tel < Sinatra::Base
     chain = Chain.find params[:chain_id]
 
     data, time = process_sound upload[:tempfile], upload[:type]
+
+    halt 422 if data.nil? || data.size == 0 || time.nil? || time > 30
 
     path = upload_to_s3 'sounds', data, time
 
