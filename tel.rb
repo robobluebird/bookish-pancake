@@ -1,11 +1,12 @@
 require 'mongoid'
 require 'qu'
-require_relative './models/qu/backend/mongoid'
 require 'sinatra'
 require 'sinatra/json'
 require 'sinatra/reloader' if development?
 
-Dir['./models/*.rb'].each { |file| require file }
+require_relative './models/qu/backend/mongoid'
+
+Dir['./models/*.rb'].each { |file| require_relative file }
 
 class Tel < Sinatra::Base
   set :show_exceptions => false
