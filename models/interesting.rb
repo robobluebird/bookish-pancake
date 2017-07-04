@@ -44,7 +44,7 @@ module Interesting
   def convert_sound_format_to_mp3(sound)
     tempfile = Tempfile.new ['', '.mp3']
 
-    Cocaine::CommandLine.new('ffmpeg', '-i :in -acodec libmp3lame -y -b:a 96k -ar 16000 -ac 1 :out')
+    Cocaine::CommandLine.new('ffmpeg', '-i :in -acodec libmp3lame -y -b:a 96k -ar 44100 -ac 1 :out')
       .run(in: sound.path, out: tempfile.path)
 
     tempfile
@@ -57,7 +57,7 @@ module Interesting
 
     ready = mime_type.end_with?('mp3') ? sound : convert_sound_format_to_mp3(sound)
 
-    Cocaine::CommandLine.new('sox', ':in -c 1 -C 128 :out norm riaa vad reverse vad reverse')
+    Cocaine::CommandLine.new('sox', ':in -c 1 -C 96 :out norm riaa vad reverse vad reverse')
       .run(in: ready.path, out: tempfile.path)
 
     [tempfile.read, sound_duration(tempfile)]
@@ -70,7 +70,7 @@ module Interesting
 
     tempfile = Tempfile.new ['', '.mp3']
 
-    Cocaine::CommandLine.new('sox', "#{sound_files.map(&:path).join(' ')} :out splice").run(out: tempfile.path)
+    Cocaine::CommandLine.new('crossfade', "0.5 :out #{sound_files.map(&:path).join(' ')}").run(out: tempfile.path)
 
     [tempfile.read, sound_duration(tempfile)]
   end

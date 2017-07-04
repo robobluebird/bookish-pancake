@@ -31,7 +31,7 @@ class Chain
   end
 
   def to_h
-    {
+    h = {
       id: id.to_s,
       url: url,
       duration: duration,
@@ -39,6 +39,12 @@ class Chain
       queued_build_count: queued_build_count,
       sounds: visible_sounds.map(&:to_h)
     }
+
+    if h[:sounds].count > 1
+      h[:sounds].map { |hash| hash[:duration] = hash[:duration] - 0.25 }
+    end
+
+    h
   end
 
   def included_sounds
