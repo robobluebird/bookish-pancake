@@ -131,6 +131,7 @@ DEPENDENCIES
   guard-rspec
   json_spec
   mongoid
+  pry
   qu
   qu-mongoid
   rack

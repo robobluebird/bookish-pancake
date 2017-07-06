@@ -39,6 +39,8 @@ module Interesting
     cmd = Cocaine::CommandLine.new('sox', ":in -n stat 2>&1 | grep 'Length (seconds)'")
     match = /(\d+\.\d+)/.match cmd.run in: sound.path
     match.captures.first.to_f.round 4
+  rescue
+    0
   end
 
   def convert_sound_format_to_mp3(sound)

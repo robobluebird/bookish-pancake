@@ -1,4 +1,5 @@
 require 'mongoid'
+require 'pry'
 require 'qu'
 require 'sinatra'
 require 'sinatra/json'
@@ -66,7 +67,7 @@ class Tel < Sinatra::Base
     if upload[:tempfile]
       data, time = process_sound upload[:tempfile], upload[:type]
 
-      chain.destroy and halt 422 if data.nil? || data.size == 0 || time.nil? || time > 30
+      chain.destroy and halt 422 if data.nil? || data.size == 0 || time.zero? || time > 30
 
       path = upload_to_s3 'sounds', data, time
 
@@ -83,7 +84,7 @@ class Tel < Sinatra::Base
 
     data, time = process_sound upload[:tempfile], upload[:type]
 
-    halt 422 if data.nil? || data.size == 0 || time.nil? || time > 30
+    halt 422 if data.nil? || data.size == 0 || time.zero? || time > 30
 
     path = upload_to_s3 'sounds', data, time
 
