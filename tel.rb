@@ -54,11 +54,11 @@ class Tel < Sinatra::Base
   end
 
   get '/chains/:chain_id' do
-    json chain: Chain.find(params[:chain_id]).to_h
+    json chain: (Chain.find(params[:chain_id]).to_h rescue nil)
   end
 
   get '/codes/:code/chain' do
-    json chain: (Chain.find_by(code: params[:code]) rescue nil).to_h
+    json chain: (Chain.find_by(code: params[:code]).to_h rescue nil)
   end
 
   post '/chains' do
