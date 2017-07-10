@@ -44,13 +44,22 @@ class Tel < Sinatra::Base
       halt 403
     end
   end
-  
+
   get '/' do
     "hello darkness my old friend"
   end
 
   get '/chains' do
-    json chains: Chain.all.to_a.shuffle.map(&:to_h)
+    limit = 20
+    page = params[:page] || 1
+    offset = (page - 1) * limit
+    pages = (Chain.count / limit.to_f).ceil
+
+    json pages: pages, chains: Chain.order_by(created_at: :desc).offset(offset).limit(limit).map(&:to_h)
+  end
+
+  get '/chains/random' do
+    json chains: (0..Chain.count-1).sort_by{rand}.slice(0,10).map { |i| Chain.skip(i).first.to_h }
   end
 
   get '/chains/:chain_id' do
