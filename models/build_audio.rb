@@ -10,7 +10,7 @@ class BuildAudio
 
     data, time = combine_sounds chain.included_sounds
 
-    return if data.nil? || data.size == 0 || time.nil? || time > 30
+    return if data.nil? || data.size == 0 || time.zero?
 
     path = upload_to_s3 'chains', data, time, chain.url
 
