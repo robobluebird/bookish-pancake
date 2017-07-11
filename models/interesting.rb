@@ -78,7 +78,7 @@ module Interesting
   end
 
   def upload_to_s3(type, data = nil, time = nil, old_url = nil)
-    return if data.nil? || data.size == 0 || time.nil? || time > 30
+    return if data.nil? || data.size == 0 || time.zero? || (type == 'sounds' && time > 16)
 
     new_url = file_path(type: type, extension: 'mp3')
 
