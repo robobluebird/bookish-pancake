@@ -38,7 +38,7 @@ class Tel < Sinatra::Base
   end
 
   post '/access_tokens' do
-    if TemporaryToken.validate! params[:access_token][:token]
+    if TemporaryToken.validate! params[:token]
       json token: AccessToken.create.token
     else
       halt 403
@@ -55,19 +55,19 @@ class Tel < Sinatra::Base
     offset = (page - 1) * limit
     pages = (Chain.count / limit.to_f).ceil
 
-    json pages: pages, chains: Chain.order_by(created_at: :desc).offset(offset).limit(limit).map(&:to_h)
+    json pages: pages, chains: Chain.order_by(created_at: :desc).offset(offset).limit(limit).map { |c| c.to_h(current_token.starred) }
   end
 
   get '/chains/random' do
-    json chains: (0..Chain.count-1).sort_by{rand}.slice(0,10).map { |i| Chain.skip(i).first.to_h }
+    json chains: (0..Chain.count-1).sort_by{ rand }.slice(0,10).map { |i| Chain.skip(i).first.to_h(current_token.starred) }
   end
 
   get '/chains/:chain_id' do
-    json chain: (Chain.find(params[:chain_id]).to_h rescue nil)
+    json chain: (Chain.find(params[:chain_id]).to_h(current_token.starred) rescue nil)
   end
 
   get '/codes/:code/chain' do
-    json chain: (Chain.find_by(code: params[:code]).to_h rescue nil)
+    json chain: (Chain.find_by(code: params[:code]).to_h(current_token.starred) rescue nil)
   end
 
   post '/chains' do
@@ -85,7 +85,7 @@ class Tel < Sinatra::Base
       chain.inc queued_build_count: 1 if Qu.enqueue BuildAudio, chain.id.to_s
     end
 
-    json chain: chain.to_h
+    json chain: chain.to_h(current_token.starred)
   end
 
   post '/chains/:chain_id/sounds' do
@@ -101,7 +101,7 @@ class Tel < Sinatra::Base
 
     chain.inc queued_build_count: 1 if Qu.enqueue BuildAudio, chain.id.to_s, [sound.id.to_s]
 
-    json chain: chain.to_h
+    json chain: chain.to_h(current_token.starred)
   end
 
   post '/chains/:chain_id/sounds/:sound_id/toggle' do
@@ -113,6 +113,24 @@ class Tel < Sinatra::Base
 
     chain.inc queued_build_count: 1 if Qu.enqueue BuildAudio, chain.id.to_s
 
-    json chain: chain.to_h
+    json chain: chain.to_h(current_token.starred)
+  end
+
+  get '/starred' do
+    json chains: Chain.find(current_token.starred).map { |c| c.to_h(current_token.starred)}
+  end
+
+  post '/starred' do
+    halt 422 if params[:chain_id].nil? || (Chain.find(params[:chain_id]) rescue nil).nil?
+
+    if current_token.starred.include? params[:chain_id]
+      current_token.starred.delete params[:chain_id]
+    else
+      current_token.starred.push params[:chain_id]
+    end
+
+    current_token.save
+
+    json chain: Chain.find(params[:chain_id]).to_h(current_token.starred)
   end
 end

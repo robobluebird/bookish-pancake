@@ -30,14 +30,15 @@ class Chain
     code
   end
 
-  def to_h
+  def to_h(starred_chain_ids = [])
     {
       id: id.to_s,
       url: url,
       duration: duration,
       code: code,
       queued_build_count: queued_build_count,
-      sounds: visible_sounds.map(&:to_h)
+      sounds: visible_sounds.map(&:to_h),
+      starred: starred_chain_ids.include?(id.to_s)
     }
   end
 
