@@ -50,12 +50,16 @@ class Tel < Sinatra::Base
   end
 
   get '/chains' do
-    limit = 20
-    page = params[:page] || 1
-    offset = (page - 1) * limit
-    pages = (Chain.count / limit.to_f).ceil
+    # limit = 20
+    # page = params[:page] || 1
+    # offset = (page - 1) * limit
+    # pages = (Chain.count / limit.to_f).ceil
+    #
+    # json pages: pages, chains: Chain.order_by(created_at: :desc).offset(offset).limit(limit).map { |c| c.to_h(current_token.starred) }
 
-    json pages: pages, chains: Chain.order_by(created_at: :desc).offset(offset).limit(limit).map { |c| c.to_h(current_token.starred) }
+    halt 400 if params[:chain_ids].nil? || params[:chain_ids].empty?
+
+    json chains: Chain.find(params[:chain_ids]).sort_by { |c| params[:chain_ids].index(c.id.to_s) }.map { |c| c.to_h(current_token.starred) }
   end
 
   get '/chains/random' do
@@ -76,13 +80,17 @@ class Tel < Sinatra::Base
     if upload[:tempfile]
       data, time = process_sound upload[:tempfile], upload[:type]
 
-      chain.destroy and halt 422 if data.nil? || data.size == 0 || time.zero? || time > 16
+      chain.destroy and halt 422 unless (1..16).cover? time
 
       path = upload_to_s3 'sounds', data, time
 
       chain.add_sound url: path, duration: time, visible: true
 
-      chain.inc queued_build_count: 1 if Qu.enqueue BuildAudio, chain.id.to_s
+      data, time = combine_sounds chain.included_sounds
+
+      path = upload_to_s3 'chains', data, time, chain.url
+
+      chain.update(url: path, duration: time) if path
     end
 
     json chain: chain.to_h(current_token.starred)
@@ -93,7 +101,7 @@ class Tel < Sinatra::Base
 
     data, time = process_sound upload[:tempfile], upload[:type]
 
-    halt 422 if data.nil? || data.size == 0 || time.zero? || time > 16
+    halt 422 unless (1..16).cover? time
 
     path = upload_to_s3 'sounds', data, time
 
