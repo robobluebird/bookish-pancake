@@ -1,17 +1,22 @@
 require_relative './interesting'
-require_relative './chain'
+require_relative './circle'
 require_relative './sound'
 
 class BuildAudio
   extend Interesting
 
-  def self.perform(chain_id, new_sounds = nil)
-    chain = Chain.find chain_id
+  def self.perform(circle_id, visible_sounds = nil, unvisible_sounds = nil)
+    circle = Circle.find circle_id
 
-    data, time = combine_sounds chain.included_sounds
+    data, time = combine_sounds circle.included_sounds
 
-    path = upload_to_s3 'chains', data, time, chain.url
+    path = upload_to_s3 'circles', data, time, circle.url
 
-    chain.visiblize(new_sounds).inc(queued_build_count: -1).update(url: path, duration: time) if path
+    if path
+      circle.visiblize(visible_sounds)
+        .unvisiblize(unvisible_sounds)
+        .inc(queued_build_count: -1)
+        .update(url: path, duration: time)
+    end
   end
 end

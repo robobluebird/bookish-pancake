@@ -19,6 +19,16 @@ class Tel < Sinatra::Base
 
   helpers Interesting
 
+  helpers do
+    def circle
+      @circle ||= Circle.find params[:circle_id]
+    end
+
+    def sound
+      @sound ||= circle.sounds.find params[:sound_id]
+    end
+  end
+
   before do
     unless request.fullpath.include?('access_tokens') || request.fullpath == '/'
       halt 401 if current_token.nil?
@@ -49,55 +59,64 @@ class Tel < Sinatra::Base
     "hello darkness my old friend"
   end
 
-  get '/chains' do
+  get '/circles' do
     # limit = 20
     # page = params[:page] || 1
     # offset = (page - 1) * limit
-    # pages = (Chain.count / limit.to_f).ceil
+    # pages = (Circle.count / limit.to_f).ceil
     #
-    # json pages: pages, chains: Chain.order_by(created_at: :desc).offset(offset).limit(limit).map { |c| c.to_h(current_token.starred) }
+    # json pages: pages, circles: Circle.order_by(created_at: :desc).offset(offset).limit(limit).map { |c| c.to_h(current_token.starred) }
 
-    halt 400 if params[:chain_ids].nil? || params[:chain_ids].empty?
+    halt 400 if params[:circle_ids].nil? || params[:circle_ids].empty?
 
-    json chains: Chain.find(params[:chain_ids]).sort_by { |c| params[:chain_ids].index(c.id.to_s) }.map { |c| c.to_h(current_token.starred) }
+    json circles: Circle.visible
+      .where(:_id.in => params[:circle_ids])
+      .sort_by { |c| params[:circle_ids].index(c.id.to_s) }
+      .map { |c| c.to_h(current_token.starred) }
   end
 
-  get '/chains/random' do
-    json chains: (0..Chain.count-1).sort_by{ rand }.slice(0,10).map { |i| Chain.skip(i).first.to_h(current_token.starred) }
+  get '/circles/random' do
+    json circles: (0..Circle.visible.count - 1)
+      .sort_by { rand }
+      .slice(0,10)
+      .map { |i| Circle.visible.skip(i).first.to_h(current_token.starred) }
   end
 
-  get '/chains/:chain_id' do
-    json chain: (Chain.find(params[:chain_id]).to_h(current_token.starred) rescue nil)
+  get '/circles/:circle_id' do
+    json circle: (Circle.find(params[:circle_id]).to_h(current_token.starred) rescue nil)
   end
 
-  get '/codes/:code/chain' do
-    json chain: (Chain.find_by(code: params[:code]).to_h(current_token.starred) rescue nil)
+  get '/codes/:code/circle' do
+    json circle: (Circle.find_by(code: params[:code]).to_h(current_token.starred) rescue nil)
   end
 
-  post '/chains' do
-    chain = Chain.create
+  post '/circles' do
+    circle = Circle.create token: current_token.token
 
     if upload[:tempfile]
       data, time = process_sound upload[:tempfile], upload[:type]
 
-      chain.destroy and halt 422 unless (1..16).cover? time
+      circle.destroy and halt 422 unless (1..16).cover? time
 
       path = upload_to_s3 'sounds', data, time
 
-      chain.add_sound url: path, duration: time, visible: true
+      circle.add_sound url: path, duration: time, visible: true, token: current_token.token
 
-      data, time = combine_sounds chain.included_sounds
+      data, time = combine_sounds circle.included_sounds
 
-      path = upload_to_s3 'chains', data, time, chain.url
+      path = upload_to_s3 'circles', data, time, circle.url
 
-      chain.update(url: path, duration: time) if path
+      circle.update(url: path, duration: time) if path
     end
 
-    json chain: chain.to_h(current_token.starred)
+    json circles: Circle.visible
+      .where(token: current_token.token)
+      .order(created_at: :desc)
+      .map { |c| c.to_h(current_token.starred) }
   end
 
-  post '/chains/:chain_id/sounds' do
-    chain = Chain.find params[:chain_id]
+  post '/circles/:circle_id/sounds' do
+    circle = Circle.find params[:circle_id]
 
     data, time = process_sound upload[:tempfile], upload[:type]
 
@@ -105,40 +124,55 @@ class Tel < Sinatra::Base
 
     path = upload_to_s3 'sounds', data, time
 
-    sound = chain.add_sound url: path, duration: time
+    sound = circle.add_sound url: path, duration: time, visible: false, token: current_token.token
 
-    chain.inc queued_build_count: 1 if Qu.enqueue BuildAudio, chain.id.to_s, [sound.id.to_s]
+    circle.inc queued_build_count: 1 if Qu.enqueue BuildAudio, circle.id.to_s, [sound.id.to_s]
 
-    json chain: chain.to_h(current_token.starred)
+    json circle: circle.to_h(current_token.starred)
   end
 
-  post '/chains/:chain_id/sounds/:sound_id/toggle' do
-    chain = Chain.find params[:chain_id]
+  post '/circles/:circle_id/sounds/:sound_id/hide' do
+    circle = Circle.find params[:circle_id]
 
-    sound = chain.sounds.find params[:sound_id]
+    sound = circle.sounds.find params[:sound_id]
 
-    sound.update included: !sound.included
+    if circle.included_sounds.count <= 1
+      circle.update visible: false
 
-    chain.inc queued_build_count: 1 if Qu.enqueue BuildAudio, chain.id.to_s
+      json circle: circle.to_h(current_token.starred), hidden: true
+    else
+      sound.update included: false
 
-    json chain: chain.to_h(current_token.starred)
+      circle.inc queued_build_count: 1 if Qu.enqueue BuildAudio, circle.id.to_s, nil, [sound.id.to_s]
+
+      json circle: circle.to_h(current_token.starred)
+    end
+  end
+
+  get '/created' do
+    json circles: Circle.visible
+      .where(token: current_token.token)
+      .order(created_at: :desc)
+      .map { |c| c.to_h(current_token.starred) }
   end
 
   get '/starred' do
-    json chains: Chain.find(current_token.starred).map { |c| c.to_h(current_token.starred)}
+    json circles: Circle.visible
+      .where(:_id.in => current_token.starred)
+      .map { |c| c.to_h(current_token.starred) }
   end
 
   post '/starred' do
-    halt 422 if params[:chain_id].nil? || (Chain.find(params[:chain_id]) rescue nil).nil?
+    halt 422 if params[:circle_id].nil? || (Circle.find(params[:circle_id]) rescue nil).nil?
 
-    if current_token.starred.include? params[:chain_id]
-      current_token.starred.delete params[:chain_id]
+    if current_token.starred.include? params[:circle_id]
+      current_token.starred.delete params[:circle_id]
     else
-      current_token.starred.push params[:chain_id]
+      current_token.starred.push params[:circle_id]
     end
 
     current_token.save
 
-    json chain: Chain.find(params[:chain_id]).to_h(current_token.starred)
+    json circle: Circle.find(params[:circle_id]).to_h(current_token.starred)
   end
 end

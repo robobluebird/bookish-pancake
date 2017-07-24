@@ -2,14 +2,15 @@ class Sound
   include Mongoid::Document
   include Mongoid::Timestamps
 
-  field :position, type: Integer
-  field :visible,  type: Boolean, default: false
-  field :included, type: Boolean, default: false
-  field :duration, type: Float
-  field :url,      type: String
-  field :color,    type: String
+  field :position
+  field :visible,  default: false
+  field :included, default: false
+  field :duration
+  field :url
+  field :color
+  field :token
 
-  embedded_in :chain
+  embedded_in :circle
 
   def initialize(attrs = nil)
     super attrs && attrs.merge(color: random_color) || { color: random_color }
@@ -21,7 +22,8 @@ class Sound
       url: url,
       duration: duration,
       position: position,
-      color: color
+      color: color,
+      token: token
     }
   end
 

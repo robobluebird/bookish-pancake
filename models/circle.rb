@@ -1,6 +1,6 @@
 require 'securerandom'
 
-class Chain
+class Circle
   include Mongoid::Document
   include Mongoid::Timestamps
 
@@ -9,8 +9,14 @@ class Chain
   field :url
   field :code
   field :queued_build_count, default: 0
+  field :token
+  field :visible, default: true
 
   embeds_many :sounds
+
+  def self.visible
+    where visible: true
+  end
 
   def initialize(attrs = nil)
     super attrs && attrs.merge(code: random_code) || { code: random_code }
@@ -30,15 +36,16 @@ class Chain
     code
   end
 
-  def to_h(starred_chain_ids = [])
+  def to_h(starred_circle_ids = [])
     {
       id: id.to_s,
       url: url,
       duration: duration,
       code: code,
       queued_build_count: queued_build_count,
+      token: token,
       sounds: visible_sounds.map(&:to_h),
-      starred: starred_chain_ids.include?(id.to_s)
+      starred: starred_circle_ids.include?(id.to_s)
     }
   end
 
@@ -46,14 +53,23 @@ class Chain
     sounds.where(included: true).order_by position: :asc
   end
 
-  def visible_sounds
-    sounds.where(included: true, visible: true).order_by position: :asc
+  def visible_sounds(other_sounds = [])
+    sounds.or({ visible: true }, { :_id.in => other_sounds })
+      .order_by position: :asc
   end
 
   def visiblize(sound_ids)
     return self if sound_ids.nil? || sound_ids.empty?
 
     sounds.find(sound_ids).each { |sound| sound.update visible: true }
+
+    self
+  end
+
+  def unvisiblize(sound_ids)
+    return self if sound_ids.nil? || sound_ids.empty?
+
+    sounds.find(sound_ids).each { |sound| sound.update visible: false }
 
     self
   end
