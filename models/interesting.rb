@@ -24,8 +24,6 @@ module Interesting
   end
 
   def fetch_sounds(sounds)
-    puts "fetch sounds: #{sounds.to_a.inspect}"
-
     sounds.map do |sound|
       response = fetch_sound sound
       response.body.rewind
@@ -68,8 +66,6 @@ module Interesting
   end
 
   def combine_sounds(sounds = [])
-    puts "combine sounds: #{sounds.to_a.inspect}"
-
     sound_files = fetch_sounds sounds
 
     return if sound_files.empty? || sound_files.nil?
