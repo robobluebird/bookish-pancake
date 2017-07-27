@@ -131,6 +131,14 @@ class Tel < Sinatra::Base
     json circle: circle.to_h(current_token.starred)
   end
 
+  post '/circles/:circle_id/hide' do
+    circle = Circle.find params[:circle_id]
+
+    circle.update visible: false
+
+    json circle: circle.to_h(current_token.starred), hidden: true
+  end
+
   post '/circles/:circle_id/sounds/:sound_id/hide' do
     circle = Circle.find params[:circle_id]
 
