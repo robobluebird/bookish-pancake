@@ -59,7 +59,7 @@ module Interesting
 
     ready = mime_type.end_with?('mp3') ? sound : convert_sound_format_to_mp3(sound)
 
-    Cocaine::CommandLine.new('sox', ':in -c 1 -C 96 :out riaa compand 0.01,1 -90,-90,-70,-70,-60,-20,0,0 -5 norm fade 0.20 reverse fade 0.20 reverse')
+    Cocaine::CommandLine.new('sox', ':in -c 1 -C 96 :out compand 0.01,1 -90,-90,-70,-70,-60,-20,0,0 -5 norm fade 0.20 reverse fade 0.20 reverse')
       .run(in: ready.path, out: tempfile.path)
 
     [tempfile.read, sound_duration(tempfile)]
