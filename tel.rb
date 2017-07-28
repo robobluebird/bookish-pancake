@@ -31,7 +31,18 @@ class Tel < Sinatra::Base
 
   before do
     unless request.fullpath.include?('access_tokens') || request.fullpath == '/'
-      halt 401 if current_token.nil?
+      halt 500 if request.env['HTTP_USER_AGENT'] !~ /Alamofire/
+
+      if current_token.nil?
+        if !request.authorization.value.nil?
+          @current_token = AccessToken.create(token: request.authorization.value)
+
+          halt 401 if current_token.nil?
+        else
+          halt 401
+        end
+      end
+
       halt 403 if current_token.banned?
     end
   end

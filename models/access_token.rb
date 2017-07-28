@@ -7,6 +7,10 @@ class AccessToken
   field :starred, type: Array, default: Array.new
 
   def initialize(attrs = nil)
-    super attrs && attrs.merge(token: SecureRandom.uuid) || { token: SecureRandom.uuid }
+    attrs = {} if attrs.nil?
+
+    attrs.merge(token: SecureRandom.uuid) if attrs[:token].nil?
+
+    super attrs
   end
 end
