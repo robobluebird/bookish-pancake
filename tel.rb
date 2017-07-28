@@ -31,11 +31,7 @@ class Tel < Sinatra::Base
 
   before do
     unless request.fullpath.include?('access_tokens') || request.fullpath == '/'
-      if current_token.nil? && !request.authorization.value.nil?
-        AccessToken.create token: request.authorization.value
-        current_token = nil
-      end
-
+      halt 401 if current_token.nil?
       halt 403 if current_token.banned?
     end
   end
