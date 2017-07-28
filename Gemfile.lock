@@ -44,6 +44,7 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.8.1)
       slop (~> 3.4)
+    puma (3.9.1)
     qu (0.2.0)
       multi_json
     qu-mongoid (0.2.2)
@@ -96,6 +97,7 @@ DEPENDENCIES
   json_spec
   mongoid
   pry
+  puma
   qu
   qu-mongoid
   rack
