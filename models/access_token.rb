@@ -9,7 +9,7 @@ class AccessToken
   def initialize(attrs = nil)
     attrs = {} if attrs.nil?
 
-    attrs.merge(token: SecureRandom.uuid) if attrs[:token].nil?
+    attrs.merge!(token: SecureRandom.uuid) if attrs[:token].nil?
 
     super attrs
   end
