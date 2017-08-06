@@ -80,7 +80,9 @@ class Tel < Sinatra::Base
 
     halt 400 if params[:circle_ids].nil? || params[:circle_ids].empty?
 
-    json circles: Circle.visible
+    base = params[:unvisible] ? Circle : Circle.visible
+
+    json circles: base
       .where(:_id.in => params[:circle_ids])
       .sort_by { |c| params[:circle_ids].index(c.id.to_s) }
       .map { |c| c.to_h(current_token.starred) }
@@ -89,7 +91,7 @@ class Tel < Sinatra::Base
   get '/circles/random' do
     json circles: (0..Circle.visible.count - 1)
       .sort_by { rand }
-      .slice(0,10)
+      .slice(0, 20)
       .map { |i| Circle.visible.skip(i).first.to_h(current_token.starred) }
   end
 
@@ -147,7 +149,7 @@ class Tel < Sinatra::Base
 
     circle.update visible: false
 
-    json circle: circle.to_h(current_token.starred), hidden: true
+    json circle: circle.to_h(current_token.starred)
   end
 
   post '/circles/:circle_id/sounds/:sound_id/hide' do
@@ -158,7 +160,7 @@ class Tel < Sinatra::Base
     if circle.included_sounds.count <= 1
       circle.update visible: false
 
-      json circle: circle.to_h(current_token.starred), hidden: true
+      json circle: circle.to_h(current_token.starred)
     else
       sound.update included: false
 
@@ -169,7 +171,7 @@ class Tel < Sinatra::Base
   end
 
   get '/created' do
-    json circles: Circle.visible
+    json circles: Circle
       .where(token: current_token.token)
       .order(created_at: :desc)
       .map { |c| c.to_h(current_token.starred) }

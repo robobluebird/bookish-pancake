@@ -44,6 +44,7 @@ class Circle
       code: code,
       queued_build_count: queued_build_count,
       token: token,
+      visible: visible,
       sounds: visible_sounds.map(&:to_h),
       starred: starred_circle_ids.include?(id.to_s)
     }
