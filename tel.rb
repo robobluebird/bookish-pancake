@@ -30,7 +30,7 @@ class Tel < Sinatra::Base
   end
 
   before do
-    halt 500 if request.env['HTTP_USER_AGENT'] !~ /Alamofire/
+    halt 500 if request.env['HTTP_USER_AGENT'] !~ /Alamofire/ && request.fullpath != '/'
 
     unless request.fullpath.include?('access_tokens') || request.fullpath == '/'
       if current_token.nil?
