@@ -67,7 +67,7 @@ class Tel < Sinatra::Base
   end
 
   get '/' do
-    "hello darkness my old friend"
+    erb :index, layout: :layout
   end
 
   get '/circles' do

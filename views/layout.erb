@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style type="text/css">
+      body {
+        font-family: monospace;
+      }
+
+      h1 {
+        font-style:italic;
+        display:inline;
+      }
+
+      div {
+        margin: 2%;
+        padding: 0.5%;
+        text-align:center;
+      }
+
+      .circle {
+        height: 100px;
+        width: 100px;
+        -webkit-animation:spin 10s linear infinite;
+        -moz-animation:spin 10s linear infinite;
+        animation:spin 10s linear infinite;
+      }
+
+      @-moz-keyframes spin { 100% { -moz-transform: rotate(-360deg); } }
+      @-webkit-keyframes spin { 100% { -webkit-transform: rotate(-360deg); } }
+      @keyframes spin { 100% { -webkit-transform: rotate(-360deg); transform:rotate-(360deg); } }
+    </style>
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>
