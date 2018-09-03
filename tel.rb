@@ -89,10 +89,9 @@ class Tel < Sinatra::Base
   end
 
   get '/circles/random' do
-    json circles: (0..Circle.visible.count - 1)
-      .sort_by { rand }
-      .slice(0, 20)
-      .map { |i| Circle.visible.skip(i).first.to_h(current_token.starred) }
+    json circles: Circle.visible
+      .order(updated_at: :desc)
+      .map { |c| c.to_h(current_token.starred) }
   end
 
   get '/circles/:circle_id' do
